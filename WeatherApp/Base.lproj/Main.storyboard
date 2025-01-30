@@ -142,7 +142,7 @@
                                             <inset key="sectionInset" minX="0.0" minY="0.0" maxX="0.0" maxY="0.0"/>
                                         </collectionViewFlowLayout>
                                         <cells>
-                                            <collectionViewCell opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" reuseIdentifier="HourlyForecastCell" id="JrL-gj-ey5">
+                                            <collectionViewCell opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" reuseIdentifier="HourlyForecastCell" id="JrL-gj-ey5" customClass="HourlyForecastCell" customModule="WeatherApp" customModuleProvider="target">
                                                 <rect key="frame" x="0.0" y="11" width="54.333333333333336" height="98"/>
                                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                                 <collectionViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" insetsLayoutMarginsFromSafeArea="NO" id="RtV-mG-KU5">
@@ -187,6 +187,11 @@
                                                     </userDefinedRuntimeAttribute>
                                                     <userDefinedRuntimeAttribute type="boolean" keyPath="clipsToBounds" value="YES"/>
                                                 </userDefinedRuntimeAttributes>
+                                                <connections>
+                                                    <outlet property="temperatureLabel" destination="lYp-QP-bLp" id="UIa-yw-4I2"/>
+                                                    <outlet property="timeLabel" destination="NMI-3q-RXm" id="hCk-ol-KoR"/>
+                                                    <outlet property="weatherIconLabel" destination="yqP-74-jFn" id="uWi-LO-aXC"/>
+                                                </connections>
                                             </collectionViewCell>
                                         </cells>
                                     </collectionView>
@@ -194,7 +199,7 @@
                                         <rect key="frame" x="0.0" y="410" width="362" height="284"/>
                                         <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                         <prototypes>
-                                            <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="none" indentationWidth="10" reuseIdentifier="DailyForecastCell" id="Za7-S1-URn">
+                                            <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="none" indentationWidth="10" reuseIdentifier="DailyForecastCell" id="Za7-S1-URn" customClass="DailyForecastCell" customModule="WeatherApp" customModuleProvider="target">
                                                 <rect key="frame" x="0.0" y="50" width="362" height="60"/>
                                                 <autoresizingMask key="autoresizingMask"/>
                                                 <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="Za7-S1-URn" id="f30-zB-OGL">
@@ -250,6 +255,12 @@
                                                     </constraints>
                                                 </tableViewCellContentView>
                                                 <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                                <connections>
+                                                    <outlet property="dayLabel" destination="Uan-d1-Ebr" id="Of6-0D-cSs"/>
+                                                    <outlet property="maxTemperatureLabel" destination="lmx-g3-Zuy" id="Pgc-7W-Mhf"/>
+                                                    <outlet property="minTemperatureLabel" destination="Ifz-dX-xrg" id="Plz-j7-OMU"/>
+                                                    <outlet property="weatherIconLabel" destination="PRU-Sa-wol" id="iJ0-Jb-yQg"/>
+                                                </connections>
                                             </tableViewCell>
                                         </prototypes>
                                     </tableView>
@@ -266,6 +277,15 @@
                         </constraints>
                     </view>
                     <navigationItem key="navigationItem" id="mRB-2B-PCH"/>
+                    <connections>
+                        <outlet property="conditionLabel" destination="cs9-WK-KRh" id="rNV-OL-eud"/>
+                        <outlet property="dailyForecastTableView" destination="fbF-K9-O5O" id="vG2-EA-E7k"/>
+                        <outlet property="hourlyForecastCollectionView" destination="H0k-gS-IQn" id="ISp-1f-XWi"/>
+                        <outlet property="humidityLabel" destination="ovG-Vw-oZ6" id="d6g-gG-AFC"/>
+                        <outlet property="pressureLabel" destination="JPM-nc-eBn" id="mHx-V9-ULB"/>
+                        <outlet property="temperatureLabel" destination="j7h-rj-XYz" id="HVU-4A-q8U"/>
+                        <outlet property="windLabel" destination="CN2-3K-RgR" id="aDV-cu-CqM"/>
+                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
             </objects>
