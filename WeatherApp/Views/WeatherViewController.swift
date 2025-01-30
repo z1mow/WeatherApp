@@ -68,7 +68,9 @@ class WeatherViewController: UIViewController {
         windLabel.text = "\(Int(round(weather.current.windSpeed))) km/h"
         pressureLabel.text = "\(weather.current.pressure) hPa"
         
-        // Collection view ve table view'ı güncelle
+        // Collection view ve table view'ı göster ve güncelle
+        hourlyForecastCollectionView.isHidden = false
+        dailyForecastTableView.isHidden = false
         hourlyForecastCollectionView.reloadData()
         dailyForecastTableView.reloadData()
     }

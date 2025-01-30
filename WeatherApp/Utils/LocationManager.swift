@@ -11,6 +11,9 @@ class LocationManager: NSObject {
     private let manager = CLLocationManager()
     weak var delegate: LocationManagerDelegate?
     
+    // İstanbul koordinatları (varsayılan konum)
+    private let defaultLocation = CLLocation(latitude: 41.0082, longitude: 28.9784)
+    
     private override init() {
         super.init()
         setupLocationManager()
@@ -23,18 +26,44 @@ class LocationManager: NSObject {
     }
     
     func requestLocation() {
-        manager.requestWhenInUseAuthorization()
-        manager.requestLocation()
+        let status = manager.authorizationStatus
+        
+        switch status {
+        case .notDetermined:
+            manager.requestWhenInUseAuthorization()
+        case .restricted, .denied:
+            // Konum izni reddedilmişse varsayılan konumu kullan
+            delegate?.locationManager(self, didUpdateLocation: defaultLocation)
+        case .authorizedWhenInUse, .authorizedAlways:
+            manager.requestLocation()
+        @unknown default:
+            delegate?.locationManager(self, didUpdateLocation: defaultLocation)
+        }
     }
 }
 
 extension LocationManager: CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        guard let location = locations.last else { return }
+        guard let location = locations.last else {
+            delegate?.locationManager(self, didUpdateLocation: defaultLocation)
+            return
+        }
         delegate?.locationManager(self, didUpdateLocation: location)
     }
     
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        delegate?.locationManager(self, didFailWithError: error)
+        // Konum alınamazsa varsayılan konumu kullan
+        delegate?.locationManager(self, didUpdateLocation: defaultLocation)
+    }
+    
+    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        switch manager.authorizationStatus {
+        case .authorizedWhenInUse, .authorizedAlways:
+            manager.requestLocation()
+        case .denied, .restricted:
+            delegate?.locationManager(self, didUpdateLocation: defaultLocation)
+        default:
+            break
+        }
     }
 } 
