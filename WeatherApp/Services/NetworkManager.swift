@@ -3,7 +3,7 @@ import Foundation
 class NetworkManager {
     static let shared = NetworkManager()
     private let baseURL = "https://api.openweathermap.org/data/3.0/onecall"
-    private let apiKey = "YOUR_API_KEY" // OpenWeatherMap API key'inizi buraya ekleyin
+    private let apiKey = Constants.weatherApiKey
     
     private init() {}
     
