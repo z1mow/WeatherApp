@@ -1,6 +1,26 @@
 import Foundation
 import CoreLocation
 
+enum LocationError: LocalizedError {
+    case denied
+    case notDetermined
+    case restricted
+    case unknown
+    
+    var errorDescription: String? {
+        switch self {
+        case .denied:
+            return "Konum izni reddedildi. Ayarlardan konum iznini etkinleştirin."
+        case .notDetermined:
+            return "Konum izni belirlenmedi."
+        case .restricted:
+            return "Konum erişimi kısıtlandı."
+        case .unknown:
+            return "Bilinmeyen bir hata oluştu."
+        }
+    }
+}
+
 protocol LocationManagerDelegate: AnyObject {
     func locationManager(_ manager: LocationManager, didUpdateLocation location: CLLocation)
     func locationManager(_ manager: LocationManager, didFailWithError error: Error)
@@ -31,13 +51,14 @@ class LocationManager: NSObject {
         switch status {
         case .notDetermined:
             manager.requestWhenInUseAuthorization()
-        case .restricted, .denied:
-            // Konum izni reddedilmişse varsayılan konumu kullan
-            delegate?.locationManager(self, didUpdateLocation: defaultLocation)
+        case .restricted:
+            delegate?.locationManager(self, didFailWithError: LocationError.restricted)
+        case .denied:
+            delegate?.locationManager(self, didFailWithError: LocationError.denied)
         case .authorizedWhenInUse, .authorizedAlways:
             manager.requestLocation()
         @unknown default:
-            delegate?.locationManager(self, didUpdateLocation: defaultLocation)
+            delegate?.locationManager(self, didFailWithError: LocationError.unknown)
         }
     }
 }
@@ -52,18 +73,22 @@ extension LocationManager: CLLocationManagerDelegate {
     }
     
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        // Konum alınamazsa varsayılan konumu kullan
-        delegate?.locationManager(self, didUpdateLocation: defaultLocation)
+        print("Konum Hatası: \(error.localizedDescription)")
+        delegate?.locationManager(self, didFailWithError: LocationError.unknown)
     }
     
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         switch manager.authorizationStatus {
         case .authorizedWhenInUse, .authorizedAlways:
             manager.requestLocation()
-        case .denied, .restricted:
-            delegate?.locationManager(self, didUpdateLocation: defaultLocation)
-        default:
-            break
+        case .denied:
+            delegate?.locationManager(self, didFailWithError: LocationError.denied)
+        case .restricted:
+            delegate?.locationManager(self, didFailWithError: LocationError.restricted)
+        case .notDetermined:
+            delegate?.locationManager(self, didFailWithError: LocationError.notDetermined)
+        @unknown default:
+            delegate?.locationManager(self, didFailWithError: LocationError.unknown)
         }
     }
 } 

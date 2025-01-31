@@ -63,7 +63,9 @@ class WeatherViewController: UIViewController {
         
         // Ana hava durumu
         temperatureLabel.text = "\(Int(round(weather.current.temp)))°"
-        conditionLabel.text = weather.current.weather.first?.description.capitalized
+        if let description = weather.current.weather.first?.description {
+            conditionLabel.text = translateWeatherDescription(description)
+        }
         humidityLabel.text = "\(weather.current.humidity)%"
         windLabel.text = "\(Int(round(weather.current.windSpeed))) km/h"
         pressureLabel.text = "\(weather.current.pressure) hPa"
@@ -79,6 +81,21 @@ class WeatherViewController: UIViewController {
         let alert = UIAlertController(title: "Hata", message: error.localizedDescription, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "Tamam", style: .default))
         present(alert, animated: true)
+    }
+    
+    private func translateWeatherDescription(_ description: String) -> String {
+        switch description.lowercased() {
+        case "clear sky": return "Açık"
+        case "few clouds": return "Az Bulutlu"
+        case "scattered clouds": return "Parçalı Bulutlu"
+        case "broken clouds": return "Çok Bulutlu"
+        case "shower rain": return "Sağanak Yağışlı"
+        case "rain": return "Yağmurlu"
+        case "thunderstorm": return "Gök Gürültülü Fırtına"
+        case "snow": return "Karlı"
+        case "mist": return "Sisli"
+        default: return description.capitalized
+        }
     }
 }
 
@@ -97,6 +114,7 @@ extension WeatherViewController: UICollectionViewDelegate, UICollectionViewDataS
         let date = Date(timeIntervalSince1970: Double(hourly.dt))
         let formatter = DateFormatter()
         formatter.dateFormat = "HH:00"
+        formatter.locale = Locale(identifier: "tr_TR")
         
         cell.timeLabel.text = formatter.string(from: date)
         cell.weatherIconLabel.text = hourly.weather.first?.icon.getWeatherEmoji()

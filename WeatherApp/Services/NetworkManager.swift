@@ -19,13 +19,18 @@ final class NetworkManager {
         
         let task = URLSession.shared.dataTask(with: url) { data, response, error in
             if let error = error {
-                print("Network Error: \(error.localizedDescription)")
-                completion(.failure(error))
+                print("Ağ Hatası: \(error.localizedDescription)")
+                completion(.failure(NetworkError.customError("İnternet bağlantınızı kontrol edin.")))
                 return
             }
             
             if let httpResponse = response as? HTTPURLResponse {
-                print("HTTP Status Code: \(httpResponse.statusCode)")
+                print("HTTP Durum Kodu: \(httpResponse.statusCode)")
+                
+                if httpResponse.statusCode == 401 {
+                    completion(.failure(NetworkError.customError("API anahtarı geçersiz veya süresi dolmuş.")))
+                    return
+                }
             }
             
             guard let data = data else {
@@ -38,11 +43,11 @@ final class NetworkManager {
                 let weather = try decoder.decode(WeatherModel.self, from: data)
                 completion(.success(weather))
             } catch {
-                print("Decode Error: \(error.localizedDescription)")
+                print("Çözümleme Hatası: \(error.localizedDescription)")
                 if let dataString = String(data: data, encoding: .utf8) {
                     print("Raw Response: \(dataString)")
                 }
-                completion(.failure(error))
+                completion(.failure(NetworkError.customError("Hava durumu verileri alınamadı.")))
             }
         }
         
@@ -50,7 +55,19 @@ final class NetworkManager {
     }
 }
 
-enum NetworkError: Error {
+enum NetworkError: LocalizedError {
     case invalidURL
     case noData
+    case customError(String)
+    
+    var errorDescription: String? {
+        switch self {
+        case .invalidURL:
+            return "Geçersiz URL adresi."
+        case .noData:
+            return "Veri alınamadı."
+        case .customError(let message):
+            return message
+        }
+    }
 } 
