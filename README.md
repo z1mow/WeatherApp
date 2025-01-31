@@ -4,6 +4,10 @@ A modern weather application that provides current weather conditions and foreca
 
 [Türkçe](#türkçe) | [English](#english)
 
+## Screenshots / Ekran Görüntüleri
+
+<img src="screenshots/main_screen.png" width="300" alt="Main Screen">
+
 ## English
 
 ### Features
