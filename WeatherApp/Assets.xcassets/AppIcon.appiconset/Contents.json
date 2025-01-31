@@ -1,6 +1,7 @@
 {
   "images" : [
     {
+      "filename" : "DALL·E 2025-01-31 14.13.58 - A minimalist and modern weather app icon. The design features a simple, clean sun and cloud illustration with smooth curves and a balanced layout. The.png",
       "idiom" : "universal",
       "platform" : "ios",
       "size" : "1024x1024"
@@ -12,6 +13,7 @@
           "value" : "dark"
         }
       ],
+      "filename" : "DALL·E 2025-01-31 14.13.58 - A minimalist and modern weather app icon. The design features a simple, clean sun and cloud illustration with smooth curves and a balanced layout. The 1.png",
       "idiom" : "universal",
       "platform" : "ios",
       "size" : "1024x1024"
@@ -23,6 +25,7 @@
           "value" : "tinted"
         }
       ],
+      "filename" : "DALL·E 2025-01-31 14.13.58 - A minimalist and modern weather app icon. The design features a simple, clean sun and cloud illustration with smooth curves and a balanced layout. The 2.png",
       "idiom" : "universal",
       "platform" : "ios",
       "size" : "1024x1024"
