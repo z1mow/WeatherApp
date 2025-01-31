@@ -12,7 +12,18 @@ class WeatherViewController: UIViewController {
     
     // MARK: - Properties
     private var weatherData: WeatherModel?
+    private var searchResults: [City] = []
+    private let searchResultsTableView = UITableView()
+    private var currentCityName: String = "Konum Bilgisi Alınıyor..."
     
+    lazy var searchBar: UISearchBar = {
+        let searchBar = UISearchBar()
+        searchBar.placeholder = "Şehir ara..."
+        searchBar.delegate = self
+        return searchBar
+    }()
+    
+    @IBOutlet weak var cityNameLabel: UILabel!
     @IBOutlet weak var temperatureLabel: UILabel!
     @IBOutlet weak var conditionLabel: UILabel!
     @IBOutlet weak var humidityLabel: UILabel!
@@ -26,6 +37,9 @@ class WeatherViewController: UIViewController {
         super.viewDidLoad()
         setupDelegates()
         setupLocationManager()
+        setupUI()
+        setupSearchResultsTableView()
+        cityNameLabel.text = currentCityName
     }
     
     // MARK: - Setup Methods
@@ -39,6 +53,30 @@ class WeatherViewController: UIViewController {
     private func setupLocationManager() {
         LocationManager.shared.delegate = self
         LocationManager.shared.requestLocation()
+    }
+    
+    private func setupUI() {
+        searchBar.frame = CGRect(x: 0, y: 0, width: view.frame.width - 40, height: 44)
+        navigationItem.titleView = searchBar
+    }
+    
+    private func setupSearchResultsTableView() {
+        searchResultsTableView.delegate = self
+        searchResultsTableView.dataSource = self
+        searchResultsTableView.register(UITableViewCell.self, forCellReuseIdentifier: "CityCell")
+        searchResultsTableView.isHidden = true
+        
+        view.addSubview(searchResultsTableView)
+        searchResultsTableView.translatesAutoresizingMaskIntoConstraints = false
+        
+        NSLayoutConstraint.activate([
+            searchResultsTableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            searchResultsTableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            searchResultsTableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            searchResultsTableView.heightAnchor.constraint(equalToConstant: 300)
+        ])
+        
+        view.bringSubviewToFront(searchResultsTableView)
     }
     
     // MARK: - Data Methods
@@ -89,6 +127,7 @@ class WeatherViewController: UIViewController {
         case "few clouds": return "Az Bulutlu"
         case "scattered clouds": return "Parçalı Bulutlu"
         case "broken clouds": return "Çok Bulutlu"
+        case "overcast clouds": return "Kapalı"
         case "shower rain": return "Sağanak Yağışlı"
         case "rain": return "Yağmurlu"
         case "thunderstorm": return "Gök Gürültülü Fırtına"
@@ -96,6 +135,35 @@ class WeatherViewController: UIViewController {
         case "mist": return "Sisli"
         default: return description.capitalized
         }
+    }
+}
+
+// MARK: - UISearchBarDelegate
+extension WeatherViewController: UISearchBarDelegate {
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        if searchText.isEmpty {
+            searchResults = []
+            searchResultsTableView.isHidden = true
+        } else {
+            NetworkManager.shared.searchCity(query: searchText) { [weak self] result in
+                guard let self = self else { return }
+                
+                DispatchQueue.main.async {
+                    switch result {
+                    case .success(let cities):
+                        self.searchResults = cities
+                        self.searchResultsTableView.isHidden = false
+                        self.searchResultsTableView.reloadData()
+                    case .failure(let error):
+                        self.showError(error)
+                    }
+                }
+            }
+        }
+    }
+    
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        searchBar.resignFirstResponder()
     }
 }
 
@@ -127,10 +195,20 @@ extension WeatherViewController: UICollectionViewDelegate, UICollectionViewDataS
 // MARK: - UITableViewDelegate, UITableViewDataSource
 extension WeatherViewController: UITableViewDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        if tableView == searchResultsTableView {
+            return searchResults.count
+        }
         return weatherData?.daily.count ?? 0
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        if tableView == searchResultsTableView {
+            let cell = tableView.dequeueReusableCell(withIdentifier: "CityCell", for: indexPath)
+            let city = searchResults[indexPath.row]
+            cell.textLabel?.text = city.displayName
+            return cell
+        }
+        
         guard let cell = tableView.dequeueReusableCell(withIdentifier: "DailyForecastCell", for: indexPath) as? DailyForecastCell,
               let daily = weatherData?.daily[indexPath.row] else {
             return UITableViewCell()
@@ -148,16 +226,47 @@ extension WeatherViewController: UITableViewDelegate, UITableViewDataSource {
         
         return cell
     }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        if tableView == searchResultsTableView {
+            let selectedCity = searchResults[indexPath.row]
+            currentCityName = selectedCity.name
+            cityNameLabel.text = currentCityName
+            fetchWeatherData(latitude: selectedCity.lat, longitude: selectedCity.lon)
+            searchBar.text = ""
+            searchResults = []
+            searchResultsTableView.isHidden = true
+            searchBar.resignFirstResponder()
+        }
+        tableView.deselectRow(at: indexPath, animated: true)
+    }
 }
 
 // MARK: - LocationManagerDelegate
 extension WeatherViewController: LocationManagerDelegate {
     func locationManager(_ manager: LocationManager, didUpdateLocation location: CLLocation) {
+        // Konum güncellendiğinde şehir ismini almak için CLGeocoder kullanıyoruz
+        let geocoder = CLGeocoder()
+        geocoder.reverseGeocodeLocation(location) { [weak self] placemarks, error in
+            guard let self = self,
+                  let placemark = placemarks?.first else {
+                return
+            }
+            
+            if let city = placemark.locality {
+                self.currentCityName = city
+                DispatchQueue.main.async {
+                    self.cityNameLabel.text = self.currentCityName
+                }
+            }
+        }
+        
         fetchWeatherData(latitude: location.coordinate.latitude, longitude: location.coordinate.longitude)
     }
     
     func locationManager(_ manager: LocationManager, didFailWithError error: Error) {
         showError(error)
+        cityNameLabel.text = "Konum Alınamadı"
     }
 }
 

@@ -3,9 +3,48 @@ import Foundation
 final class NetworkManager {
     static let shared = NetworkManager()
     private let baseURL = "https://api.openweathermap.org/data/3.0/onecall"
+    private let geoURL = "https://api.openweathermap.org/geo/1.0/direct"
     private let apiKey: String = Constants.apiKey
     
     private init() {}
+    
+    func searchCity(query: String, completion: @escaping (Result<[City], Error>) -> Void) {
+        let urlString = "\(geoURL)?q=\(query)&limit=5&appid=\(apiKey)"
+        
+        guard let encodedString = urlString.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+              let url = URL(string: encodedString) else {
+            completion(.failure(NetworkError.invalidURL))
+            return
+        }
+        
+        let task = URLSession.shared.dataTask(with: url) { data, response, error in
+            if let error = error {
+                completion(.failure(NetworkError.customError("İnternet bağlantınızı kontrol edin.")))
+                return
+            }
+            
+            if let httpResponse = response as? HTTPURLResponse {
+                if httpResponse.statusCode == 401 {
+                    completion(.failure(NetworkError.customError("API anahtarı geçersiz veya süresi dolmuş.")))
+                    return
+                }
+            }
+            
+            guard let data = data else {
+                completion(.failure(NetworkError.noData))
+                return
+            }
+            
+            do {
+                let cities = try JSONDecoder().decode([City].self, from: data)
+                completion(.success(cities))
+            } catch {
+                completion(.failure(NetworkError.customError("Şehir bilgileri alınamadı.")))
+            }
+        }
+        
+        task.resume()
+    }
     
     func fetchWeather(latitude: Double, longitude: Double, completion: @escaping (Result<WeatherModel, Error>) -> Void) {
         let urlString = "\(baseURL)?lat=\(latitude)&lon=\(longitude)&exclude=minutely&units=metric&appid=\(apiKey)"
@@ -69,5 +108,20 @@ enum NetworkError: LocalizedError {
         case .customError(let message):
             return message
         }
+    }
+}
+
+struct City: Codable {
+    let name: String
+    let lat: Double
+    let lon: Double
+    let country: String
+    let state: String?
+    
+    var displayName: String {
+        if let state = state {
+            return "\(name), \(state), \(country)"
+        }
+        return "\(name), \(country)"
     }
 } 
